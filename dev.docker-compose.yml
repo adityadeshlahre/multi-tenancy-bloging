@@ -1,0 +1,14 @@
+services:
+  database:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: pg
+      POSTGRES_PASSWORD: gp
+      POSTGRES_DB: mtba
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./volumes/db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:

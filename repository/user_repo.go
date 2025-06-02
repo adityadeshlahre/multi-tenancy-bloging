@@ -2,12 +2,11 @@ package repository
 
 import (
 	"context"
+	"github.com/adityadeshlahre/multi-tenant-backend-app/config"
+	"github.com/adityadeshlahre/multi-tenant-backend-app/database"
 	"github.com/adityadeshlahre/multi-tenant-backend-app/model"
 	"gorm.io/gorm"
 	"log"
-
-	"github.com/adityadeshlahre/multi-tenant-backend-app/config"
-	"github.com/adityadeshlahre/multi-tenant-backend-app/database"
 )
 
 type userRepository struct {
@@ -77,4 +76,3 @@ func (r *userRepository) GetAllUsers(ctx context.Context) ([]model.User, error) 
 	}
 	return users, nil
 }
-
