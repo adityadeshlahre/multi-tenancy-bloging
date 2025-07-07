@@ -2,9 +2,10 @@ package repository
 
 import (
 	"context"
+	"log"
+
 	"github.com/adityadeshlahre/multi-tenant-backend-app/model"
 	"gorm.io/gorm"
-	"log"
 )
 
 type orgRepository struct {

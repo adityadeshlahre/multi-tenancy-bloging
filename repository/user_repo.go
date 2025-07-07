@@ -2,11 +2,10 @@ package repository
 
 import (
 	"context"
-	"github.com/adityadeshlahre/multi-tenant-backend-app/config"
-	"github.com/adityadeshlahre/multi-tenant-backend-app/database"
+	"log"
+
 	"github.com/adityadeshlahre/multi-tenant-backend-app/model"
 	"gorm.io/gorm"
-	"log"
 )
 
 type userRepository struct {
