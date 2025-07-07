@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"log"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 
@@ -12,21 +13,29 @@ const OrganizationKey = "organizationId"
 
 func OrganizationContext(orgRepo repository.OrgRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		orgId, exists := c.Get(OrganizationKey)
-		if !exists {
-			log.Println("Organization ID not found in context")
-			c.AbortWithStatusJSON(400, gin.H{"error": "Organization ID not found"})
+		orgIdHeader := c.GetHeader("X-Organization-ID")
+		if orgIdHeader == "" {
+			log.Println("Organization ID not found in header")
+			c.AbortWithStatusJSON(400, gin.H{"error": "Organization ID header required"})
 			return
 		}
 
-		org, err := orgRepo.GetOrganizationByID(c.Request.Context(), orgId.(uint))
+		orgId, err := strconv.ParseUint(orgIdHeader, 10, 32)
+		if err != nil {
+			log.Printf("Invalid organization ID format: %v", err)
+			c.AbortWithStatusJSON(400, gin.H{"error": "Invalid organization ID format"})
+			return
+		}
+
+		org, err := orgRepo.GetOrganizationByID(c.Request.Context(), uint(orgId))
 		if err != nil {
 			log.Printf("Error fetching organization: %v", err)
-			c.AbortWithStatusJSON(500, gin.H{"error": "Internal server error"})
+			c.AbortWithStatusJSON(404, gin.H{"error": "Organization not found"})
 			return
 		}
 
 		c.Set("organization", org)
+		c.Set(OrganizationKey, uint(orgId))
 		c.Next()
 	}
 }

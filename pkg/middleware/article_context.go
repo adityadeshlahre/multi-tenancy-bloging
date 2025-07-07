@@ -13,9 +13,7 @@ import (
 const (
 	ArticleKey        = "article"
 	UserPermissionKey = "userPermission"
-)
 
-const (
 	PermissionNone    = "none"
 	PermissionView    = "view"
 	PermissionComment = "comment"
@@ -23,7 +21,7 @@ const (
 	PermissionOwner   = "owner"
 )
 
-func ArticleContext(articleRepo repository.ArticleRepository, userRepo repository.UserRepository) gin.HandlerFunc {
+func ArticleContext(articleRepo repository.ArticleRepository) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		articleIDParam := c.Param("articleId")
 		if articleIDParam == "" {
@@ -50,19 +48,14 @@ func ArticleContext(articleRepo repository.ArticleRepository, userRepo repositor
 			return
 		}
 
-		organization, exists := c.Get("organization")
-		if !exists {
-			log.Println("Organization not found in context")
-			c.AbortWithStatusJSON(500, gin.H{"error": "Organization context not found"})
-			return
-		}
-
-		org := organization.(*model.Organization)
-
-		if article.OrganizationID != org.ID {
-			log.Printf("Article %d does not belong to organization %d", article.ID, org.ID)
-			c.AbortWithStatusJSON(403, gin.H{"error": "Access denied: Article not in your organization"})
-			return
+		org, exists := c.Get("organization")
+		if exists {
+			orgModel := org.(*model.Organization)
+			if article.OrganizationID != orgModel.ID {
+				log.Printf("Article %d does not belong to organization %d", article.ID, orgModel.ID)
+				c.AbortWithStatusJSON(403, gin.H{"error": "Access denied: Article not in your organization"})
+				return
+			}
 		}
 
 		userID, exists := c.Get("userID")
@@ -74,12 +67,10 @@ func ArticleContext(articleRepo repository.ArticleRepository, userRepo repositor
 
 		userRole, exists := c.Get("userRole")
 		if !exists {
-			log.Println("User role not found in context")
-			c.AbortWithStatusJSON(401, gin.H{"error": "User authentication required"})
-			return
+			userRole = "member"
 		}
 
-		permission := determineUserPermissionWithRoles(article, userID.(uint), userRole.(string))
+		permission := determineUserPermission(article, userID.(uint), userRole.(string))
 
 		c.Set(ArticleKey, article)
 		c.Set(UserPermissionKey, permission)
@@ -90,7 +81,7 @@ func ArticleContext(articleRepo repository.ArticleRepository, userRepo repositor
 	}
 }
 
-func determineUserPermissionWithRoles(article *model.Article, userID uint, userRole string) string {
+func determineUserPermission(article *model.Article, userID uint, userRole string) string {
 	if article.UserID == userID {
 		return PermissionOwner
 	}
@@ -100,21 +91,19 @@ func determineUserPermissionWithRoles(article *model.Article, userID uint, userR
 		return PermissionEdit
 	case "editor":
 		if article.Status == "published" {
-			return PermissionEdit
+			return PermissionComment
 		}
-		return PermissionComment
+		return PermissionView
 	case "member":
 		if article.Status == "published" {
 			return PermissionComment
 		}
 		return PermissionView
-	case "viewer":
+	default:
 		if article.Status == "published" {
 			return PermissionView
 		}
 		return PermissionNone
-	default:
-		return PermissionView
 	}
 }
 
