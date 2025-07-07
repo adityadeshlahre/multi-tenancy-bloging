@@ -6,3 +6,7 @@
 - Gin Web Framework
 
 #### Thats it!
+
+#### Demo Video
+
+https://github.com/user-attachments/assets/6f20bed9-3d8c-45f1-98e7-5ee5f6ba00f6
